@@ -1,0 +1,258 @@
+<canvas id="scene"></canvas>
+
+<style>
+	* { padding: 0; margin: 0; }
+</style>
+
+<script>
+	function ScanLineMethod() {
+		var c = document.getElementById('scene');
+		var ctxt = c.getContext("2d");
+		
+		var fov = 10.0;
+		var halfTanTheta = Math.tan(fov / 2.0 * Math.PI / 180.0);
+		
+		c.width = window.innerWidth;
+		c.height = window.innerHeight;
+		
+		ctxt.fillStyle = "#000";
+		ctxt.fillRect(0, 0, c.width, c.height);
+		ctxt.fillStyle = "#fff";
+		
+		//DrawScanLine(ctxt, 20, 400, 50);
+		
+		var lines = [];
+		lines.push(
+			new Line(new Vertex(50, 30), new Vertex(10, 300)), 
+			new Line(new Vertex(50, 30), new Vertex(120, 400)), 
+			new Line(new Vertex(120, 400), new Vertex(10, 300))
+		);
+		
+		var xmin = lines[0].start.x;
+		var xmax = lines[0].start.x;
+		var ymin = lines[0].start.y;
+		var ymax = lines[0].start.y;
+		
+		for(var i = 0; i < lines.length; i++) {
+			var line = lines[i];
+			if(line.start.x < xmin) xmin = line.start.x;
+			if(line.end.x < xmin) xmin = line.end.x;
+			if(line.start.x > xmax) xmax = line.start.x;
+			if(line.end.x > xmax) xmax = line.end.x;
+			if(line.start.y < ymin) ymin = line.start.y;
+			if(line.end.y < ymin) ymin = line.end.y;
+			if(line.start.y > ymax) ymax = line.start.y;
+			if(line.end.y > ymax) ymax = line.end.y;
+		}
+		
+		/*
+		ctxt.fillRect(xmin, ymin, xmax - xmin, 1);
+		ctxt.fillRect(xmin, ymax, xmax - xmin, 1);
+		ctxt.fillRect(xmin, ymin, 1, ymax - ymin);
+		ctxt.fillRect(xmax, ymin, 1, ymax - ymin);
+		*/
+		
+		
+		
+		ctxt.fillStyle = "#fff";
+		for(var y = ymin; y < ymax; y++) {
+			var isInTriangle = false;
+			
+			for(var x = xmin; x < xmax; x++) {
+				if(!IsPointBelowLine(lines[0], new Vertex(x, y))) {
+					isInTriangle = true;
+				}
+				
+				if(!IsPointBelowLine(lines[1], new Vertex(x, y)) || !IsPointBelowLine(lines[2], new Vertex(x, y))) {
+					isInTriangle = false;
+				}
+				
+				if(isInTriangle) {
+					ctxt.fillRect(x, y, 1, 1);
+				}
+			}
+		}
+		
+		
+		ctxt.fillStyle = "#fff";
+		
+		ctxt.fillRect(lines[0].start.x, lines[0].start.y, 1, 1);
+		ctxt.fillRect(lines[0].end.x, lines[0].end.y, 1, 1);
+		
+		ctxt.fillRect(lines[1].start.x, lines[1].start.y, 1, 1);
+		ctxt.fillRect(lines[1].end.x, lines[1].end.y, 1, 1);		
+
+		/*
+		var i = 0;
+		var z = 1;
+		var points = [];
+		
+		setInterval(function() {
+			UpdatePoints(points, c);
+			RenderPoints(c, ctxt, points, halfTanTheta);
+		}, 25);
+		*/
+	};
+	
+	var Point = function(x, y) {
+		this.x = x;
+		this.y = y;
+	};
+	
+	var TriangleRenderHelper = function(ctxt) {
+		this.DrawFlatBottomTriangle = function(p0, p1, p2) {
+			var leftSlope = (p1.x - p0.x) / (p1.y - p0.y);
+			var rightSlope = (p2.x - p0.x) / (p2.y - p0.y);
+			
+			var xLeft = xRight = p0.x;
+			
+			for(var y = p0.y; y <= p1.y; y++) {
+				ctxt.fillRect(xLeft, y, xRight - xLeft, 1);
+				
+				xLeft += leftSlope;
+				xRight += rightSlope;
+			}
+		};
+		
+		this.DrawFlatTopTriangle = function(p0, p1, p2) {
+			var leftSlope = (p0.x - p1.x) / (p0.y - p1.y);
+			var rightSlope = (p0.x - p2.x) / (p0.y - p2.y);
+			
+			var xLeft = xRight = p0.x;
+			
+			for(var y = p0.y; y >= p1.y; y--) {
+				ctxt.fillRect(xLeft, y, xRight - xLeft, 1);
+				
+				xLeft += leftSlope;
+				xRight += rightSlope;
+			}
+		};
+	};
+	
+	window.onload = function() {
+		var c = document.getElementById('scene');
+		var ctxt = c.getContext("2d");
+		
+		c.width = window.innerWidth;
+		c.height = window.innerHeight;
+		
+		ctxt.fillStyle = "#000";
+		ctxt.fillRect(0, 0, c.width, c.height);
+		ctxt.fillStyle = "#fff";
+		
+		/*var trh = new TriangleRenderHelper(ctxt);
+		
+		trh.DrawFlatBottomTriangle(
+			new Point(200, 100), 
+			new Point(100, 250), 
+			new Point(400, 250)
+		);
+		trh.DrawFlatTopTriangle(
+			new Point(500, 550),
+			new Point(400, 400),
+			new Point(700, 400)
+		);*/
+		
+		setInterval(function() {t(ctxt); }, 50);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	};
+	
+	var i = 0;
+	
+	function t(ctxt) {
+		var c = document.getElementById('scene');
+	
+		ctxt.fillStyle = "#000";
+		ctxt.fillRect(0, 0, c.width, c.height);
+		ctxt.fillStyle = "#fff";
+	
+		var v1 = new Point(50, 0);
+		var v2 = new Point(0, 150);
+		var v3 = new Point(100, 200);
+		
+		var maxX = Math.max(v1.x, Math.max(v2.x, v3.x));
+		var minX = Math.min(v1.x, Math.min(v2.x, v3.x));
+		var maxY = Math.max(v1.y, Math.max(v2.y, v3.y));
+		var minY = Math.min(v1.y, Math.min(v2.y, v3.y));
+
+		/* spanning vectors of edge (v1,v2) and (v1,v3) */
+		var vs1 = new Point(v2.x - v1.x, v2.y - v1.y);
+		var vs2 = new Point(v3.x - v1.x, v3.y - v1.y);
+
+		for (var x = minX; x <= maxX; x++)
+		{
+		  for (var y = minY; y <= maxY; y++)
+		  {
+			var q = new Point(x - v1.x, y - v1.y);
+			
+			var denom = crossProduct(vs1, vs2);
+			
+			var s = crossProduct(q, vs2) / denom;
+			var t = crossProduct(vs1, q) / denom;
+			
+			if ( (s >= 0) && (t >= 0) && (s + t <= 1))
+			{
+			  ctxt.fillRect(x + 300, y + 300, 1, 1);
+			}
+		  }
+		}
+	}
+	
+	function crossProduct(v0, v1) {
+		return v0.x * v1.y - v0.y * v1.x;
+	}
+	
+	function DrawScanLine(ctxt, xMin, xMax, y) {
+		ctxt.fillRect(xMin, y, xMax - xMin, 1);
+	}
+	
+	function IsPointBelowLine(line, point) {
+		return (line.end.x - line.start.x) * (point.y - line.start.y) - (line.end.y - line.start.y) * (point.x - line.start.x) > 0;
+	}
+	
+	var Vertex = function(x, y, z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	};
+	
+	var Line = function(l0, l1) {
+		this.start = l0;
+		this.end = l1;
+	};
+	
+	function UpdatePoints(points, c) {
+		for(var i = 0; i < points.length; i++) {
+			points[i].z += 0.15;
+			
+			if(points[i].z > 10) {
+				points.splice(i--, 1);
+			}
+		}
+		
+		for(var i = 0; i < 40; i++) {
+			points.push(new Vertex(Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0, 1.0));
+		}
+	}
+	
+	function RenderPoints(c, ctxt, points, halfTanTheta) {
+		ctxt.fillStyle = "#000";
+		ctxt.fillRect(0, 0, c.width, c.height);
+		ctxt.fillStyle = "#fff";
+		
+		for(var j = 0; j < points.length; j++) {
+			var zz = points[j].z * halfTanTheta;
+			var xx = points[j].x / zz;
+			var yy = points[j].y / zz;
+			ctxt.fillRect(parseInt((xx * 0.5 + 0.5) * c.width), parseInt((yy * 0.5 + 0.5) * c.height), 1, 1);
+		}
+	}
+</script>

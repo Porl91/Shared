@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+	<body>
+		<canvas id="scene"></canvas>
+		
+		<style>
+			* {
+				margin: 0;
+				border: 0;
+				padding: 0;
+				outline: none;
+				overflow: hidden;
+			}
+		</style>
+		
+		<script>
+		
+			var Vector2 = function(x, y) {
+				this.x = x;
+				this.y = y;
+				
+				this.Cross = function(v2) {
+					return this.x * v2.y - this.y * v2.x;
+				};
+			};
+			
+			var ViewModel = function(config) {
+				var viewModel = this;
+				
+				this.canvas = null;
+				this.context = null;
+				
+				this.BeginRender = function() {
+					this.canvas = document.getElementById("scene");
+					this.context = this.canvas.getContext("2d");
+				
+					this.PrepareCanvas(true, true);
+					this.FillContext("#000");
+					
+					viewModel.RenderMain();
+					setInterval(function() {
+						viewModel.RenderMain();
+					}, config.Fps === undefined ? 
+						17 : 1000 / config.Fps		// Ms per render
+					);
+				};
+				
+				this.PrepareCanvas = function(fullScreen, correctOnResize) {
+					var resizeToWindow = function() {
+						viewModel.canvas.width = window.innerWidth;
+						viewModel.canvas.height = window.innerHeight;
+					};
+					
+					if(fullScreen) {
+						resizeToWindow();
+					
+						if(correctOnResize) {
+							window.onresize = function() {
+								resizeToWindow();
+								viewModel.RenderMain();
+							};
+						}
+					}
+				};
+				
+				this.FillContext = function(colour) {
+					var oldColour = this.context.fillStyle;
+					this.context.fillStyle = colour;
+					this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+					this.context.fillStyle = oldColour;
+				};
+				
+				this.RenderMain = function() {
+					this.context.fillStyle = "#000";
+					this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+					this.context.fillStyle = "#fff";
+					
+					this.DrawTriangle();
+				};
+				
+				this.DrawAShittyLine = function() {
+					var p1 = new Vector2(20, 50);
+					var p2 = new Vector2(60, 300);
+					
+					this.context.fillRect(p1.x, p1.y, 1, 1);
+					this.context.fillRect(p2.x, p2.y, 1, 1);
+					
+					
+					var x = p1.x;
+					var y = p1.y;
+					var e = 0;
+					var s = (p2.x - p1.x) / (p2.y - p1.y);
+					
+					while(y != p2.y) {
+						this.context.fillRect(x, y, 1, 1);
+						
+						if(e >= 0.5) {
+							x++;
+							e--;
+						}
+						
+						e += s;
+						y++;
+					}
+				};
+				
+				this.DrawTriangle = function() {
+					
+					var v1 = new Vector2(50, 0);
+					var v2 = new Vector2(0, 50);
+					var v3 = new Vector2(100, 50);
+					
+					var c1 = v1.Cross(v2);
+					var c2 = v1.Cross(v3);
+					
+					this.context.fillStyle = "#fff";
+					
+					this.context.fillRect(v1.x + 300, v1.y + 300, 1, 1);
+					this.context.fillRect(v2.x + 300, v2.y + 300, 1, 1);
+					this.context.fillRect(v3.x + 300, v3.y + 300, 1, 1);
+					
+					
+					
+					
+					
+				};
+				
+			};
+			
+			window.onload = function() {
+				new ViewModel({
+					Fps: 1
+				}).BeginRender();
+			};
+			
+		</script>
+	</body>
+</html>
