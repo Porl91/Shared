@@ -19,6 +19,30 @@
 				this.x = x;
 				this.y = y;
 				
+				this.Add = function(other) {
+					return typeof(other) == 'object' ?
+						new Vector2(this.x + v2.x, this.y + v2.y) : 
+						new Vector2(this.x + other, this.y + other);
+				};
+				
+				this.Sub = function(other) {
+					return typeof(other) == 'object' ?
+						new Vector2(this.x - v2.x, this.y - v2.y) : 
+						new Vector2(this.x - other, this.y - other);
+				};
+				
+				this.Mult = function(other) {
+					return typeof(other) == 'object' ?
+						new Vector2(this.x * v2.x, this.y * v2.y) : 
+						new Vector2(this.x * other, this.y * other);
+				};
+				
+				this.Div = function(other) {
+					return typeof(other) == 'object' ?
+						new Vector2(this.x / v2.x, this.y / v2.y) : 
+						new Vector2(this.x / other, this.y / other);
+				};
+				
 				this.Cross = function(v2) {
 					return this.x * v2.y - this.y * v2.x;
 				};
@@ -110,14 +134,11 @@
 					var v2 = new Vector2(0, 50);
 					var v3 = new Vector2(100, 50);
 					
-					var c1 = v1.Cross(v2);
-					var c2 = v1.Cross(v3);
-					
 					this.context.fillStyle = "#fff";
-					
 					this.context.fillRect(v1.x + 300, v1.y + 300, 1, 1);
 					this.context.fillRect(v2.x + 300, v2.y + 300, 1, 1);
 					this.context.fillRect(v3.x + 300, v3.y + 300, 1, 1);
+					
 					
 					
 					
