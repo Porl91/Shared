@@ -51,12 +51,19 @@
 			var ViewModel = function(config) {
 				var viewModel = this;
 				
+				this.canvasId = null;
 				this.canvas = null;
 				this.context = null;
 				this.renderCallback = null;
 				
 				this.BeginRender = function() {
-					this.canvas = document.getElementById("scene");
+					if(typeof(config.CanvasId) == 'string') {
+						this.canvasId = config.CanvasId;
+					} else {
+						return;
+					}
+				
+					this.canvas = document.getElementById(this.canvasId);
 					this.context = this.canvas.getContext("2d");
 					
 					if(typeof(config.RenderCallback) == 'function') {
@@ -151,6 +158,7 @@
 			
 			window.onload = function() {
 				new ViewModel({
+					CanvasId: 'scene', 
 					Fps: 1, 
 					RenderCallback: function() {
 						console.log('test');
