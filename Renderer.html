@@ -53,10 +53,15 @@
 				
 				this.canvas = null;
 				this.context = null;
+				this.renderCallback = null;
 				
 				this.BeginRender = function() {
 					this.canvas = document.getElementById("scene");
 					this.context = this.canvas.getContext("2d");
+					
+					if(typeof(config.RenderCallback) == 'function') {
+						this.renderCallback = config.RenderCallback;
+					}
 				
 					this.PrepareCanvas(true, true);
 					this.FillContext("#000");
@@ -99,7 +104,9 @@
 					this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
 					this.context.fillStyle = "#fff";
 					
-					this.DrawTriangle();
+					if(typeof(this.renderCallback) == 'function') {
+						this.renderCallback();
+					}
 				};
 				
 				this.DrawAShittyLine = function() {
@@ -138,12 +145,16 @@
 					this.context.fillRect(v1.x + 300, v1.y + 300, 1, 1);
 					this.context.fillRect(v2.x + 300, v2.y + 300, 1, 1);
 					this.context.fillRect(v3.x + 300, v3.y + 300, 1, 1);
+					
 				};
 			};
 			
 			window.onload = function() {
 				new ViewModel({
-					Fps: 1
+					Fps: 1, 
+					RenderCallback: function() {
+						console.log('test');
+					}
 				}).BeginRender();
 			};
 			
