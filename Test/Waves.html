@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<body>
+	<canvas id="view"></canvas>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			border: 0;
+			outline: none;
+		}
+	</style>
+	<script>
+		var view, ctxt;
+		var points = {};
+		var mouseDown = false;
+		var lastMouseX = 0;
+		var lastMouseY = 0;
+		var xRot = 0;
+		var yRot = 0;
+		var degInRad = Math.PI / 180.0;
+		var xc = 1, xs = 0, 
+			yc = 1, ys = 0;
+
+		window.onload = function() {
+			view = document.getElementById("view");
+			ctxt = view.getContext("2d");
+			resizeView();
+			for(var y = 0; y < 60; y++) {
+				for(var x = 0; x < 60; x++) {
+					points[y * 60 + x] = {};
+					points[y * 60 + x][0] = x / 60 - 0.5;
+					points[y * 60 + x][1] = y / 60 - 0.5;
+					points[y * 60 + x][2] = 0;
+				}
+			}
+			setInterval(function() { this.render(); }, 30);
+		}
+
+		window.onresize = function() {
+			resizeView();
+		}
+
+		window.onmousedown = window.onmouseup = function(e) {
+			mouseDown = e.type == "mousedown";
+		}
+
+		window.onmousemove = function(e) {
+			if(mouseDown) {
+				var xDelta = lastMouseX - e.clientX;
+				var yDelta = lastMouseY - e.clientY;
+				var length = Math.sqrt(xDelta * xDelta + yDelta * yDelta);
+				if(length != 0) {
+					var xDeltaNorm = xDelta / length;
+					var yDeltaNorm = yDelta / length;
+					xRot -= yDeltaNorm;
+					if(xRot < -90.0) { xRot = -90.0; }
+					if(xRot > 90.0) { xRot = 90.0; }
+					yRot -= xDeltaNorm;
+					xc = Math.cos(xRot * degInRad);
+					xs = Math.sin(xRot * degInRad);
+					yc = Math.cos(yRot * degInRad);
+					ys = Math.sin(yRot * degInRad);
+				}
+				lastMouseX = e.clientX;
+				lastMouseY = e.clientY;
+			}
+			lastMouseX = e.clientX;
+			lastMouseY = e.clientY;
+		}
+
+		function resizeView() {
+			view.width  = window.innerWidth;
+  			view.height = window.innerHeight;
+		}
+
+		function render() {
+			ctxt.fillStyle = "#000";
+			ctxt.fillRect(0, 0, view.width, view.height);
+
+			for(var k in points) {
+				var point = points[k];
+
+				var x = point[0];
+				var y = point[1];
+				var i = Math.cos((Math.sqrt(x * x + y * y) * 6 * 360.0 + ((new Date().getTime() / 2) % 360)) * degInRad);
+				var z = point[2] + i / 50 + ((Math.pow(x, 4) + Math.pow(y, 4)) * 5 * Math.cos(((new Date().getTime() / 5) % 360) * degInRad));
+
+				var rot_x = yc * x + 0 * y - ys * z;
+				var rot_y = 0 * x + 1 * y + 0 * z;
+				var rot_z = ys * x + 0 * y + yc * z;
+				var rot_yy = 0 * rot_x + xc * rot_y - xs * rot_z;
+				var rot_zz = 0 * rot_x + xs * rot_y + xc * rot_z;
+
+				rot_zz += 1.5;
+
+				var xScreen = rot_x / rot_zz;
+				var yScreen = rot_yy / rot_zz;
+
+				var r = parseInt(255.0 - i * 223.0).toString(16);
+				if(r.length == 1) { r = "0" + r; }
+				var g = (parseInt(255.0 - i * 223.0)).toString(16);
+				if(g.length == 1) { g = "0" + g; }
+				ctxt.fillStyle = "#" + r + g + "33";
+				ctxt.fillRect(parseInt(xScreen * view.height) + (view.width >> 1), parseInt(yScreen * view.height) + (view.height >> 1), 1, 1);
+			}
+		}
+	</script>
+</body>
+</html>

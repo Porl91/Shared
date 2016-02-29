@@ -1,0 +1,63 @@
+<html>
+	<head></head>
+	<body>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<script>
+			$(document).ready(function() {
+				var numbers = [
+					'zero', 'one', 'two', 'three', 'four', 
+					'five', 'six', 'seven', 'eight', 'nine', 
+					'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 
+					'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+				];
+				var tens = [
+					null, 'ten', 'twenty', 'thirty', 'forty', 'fifty'
+				];
+				
+				var $label = $('.time_label');
+				
+				updateTime();
+				setInterval(function() {
+					updateTime();
+				}, 1000);
+				
+				function updateTime() {
+					var d = new Date();
+					var h = d.getHours();
+					var m = d.getMinutes();
+					$label.html(timeToWords(h, m));
+				}
+				
+				function timeToWords(h, m) {
+					var w = '';
+					if(m == 30) {
+						w = 'half past ' + numberToWord(h % 12);
+					} else if(m == 15) {
+						w = 'quarter past ' + numberToWord(h % 12);
+					} else if(m == 45) {
+						w = 'quarter to ' + numberToWord((h + 1) % 12);
+					} else {
+						if(m < 30) {
+							w = numberToWord(m) + ' minute' + (m == 1 ? '' : 's') + ' past ' + numberToWord(h % 12);
+						} else if(m > 30) {
+							w = numberToWord(60 - m) + ' minute' + (m == 59 ? '' : 's') + ' to ' + numberToWord((h + 1) % 12);
+						}
+					}
+					return w;
+				}
+				
+				function numberToWord(n) {
+					if(n < 20) {
+						return numbers[n];
+					} else {
+						var t = tens[parseInt(n / 10)];
+						var u = numbers[parseInt(n % 10)];
+						return t + (u != 'zero' ? '-' + u : '');
+					}
+				}
+			});
+		</script>
+
+		<div class="time_label"></div>
+	</body>
+</html>

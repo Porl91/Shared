@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+	<body>
+		<canvas id="scene"></canvas>
+		<style>
+			body { margin: 0; padding: 0; overflow: hidden; }
+			canvas { position: absolute; left: 0; top: 0; }
+		</style>
+		<script>
+			window.onload = function() {
+
+				var balls = [];
+				var canvas, ctxt;
+				var gravity = 0.981;
+
+				function Init() {
+					canvas = document.getElementById("scene");
+					ctxt = canvas.getContext("2d");
+					canvas.width = 2000;
+					canvas.height = 2000;
+					for(var i = 0; i < 500; i++) { // Release the balls!
+						var radius = Math.random() * 75 + 25;
+						var colour = (Math.random() * 255 | 0).toString(16) + (Math.random() * 255 | 0).toString(16) + (Math.random() * 255 | 0).toString(16);
+						balls.push(new Ball(Math.random() * (window.innerWidth - (radius << 1)) + radius, Math.random() * (window.innerHeight - (radius << 1)) + radius, radius, "#" + colour));
+					}
+					Loop();
+					setInterval(Loop, 30);
+				}
+
+				function Update() {
+					for(var i = 0; i < balls.length; i++) {
+						balls[i].update();
+					}
+				}
+
+				function Render() {
+					ctxt.fillStyle = "#fff";
+					ctxt.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+					for(var i = 0; i < balls.length; i++) {
+						balls[i].render();
+					}
+				}
+
+				function Loop() {
+					Update();
+					Render();
+				}
+
+				var Ball = function(x, y, radius, colour) {
+					this.x = x;
+					this.y = y;
+					this.xd = 0;
+					this.yd = 0;
+					this.radius = radius;
+					this.colour = colour;
+				}
+
+				Ball.prototype.update = function() {
+					this.yd += gravity;
+					if(this.y + this.yd + this.radius > window.innerHeight) {
+						var yPrev = this.y + this.radius;
+						var yCurrent = this.y + this.yd + this.radius;
+						var j = (window.innerHeight - yPrev) / (yCurrent - yPrev);
+						this.yd = -(this.yd - gravity + gravity * j);
+						this.y = window.innerHeight - this.radius;
+					} else {
+						this.y += this.yd;
+					}
+				}
+
+				Ball.prototype.render = function() {
+					ctxt.beginPath();
+					ctxt.arc(parseInt(this.x), parseInt(this.y), this.radius, 0, 2 * Math.PI, false);
+					ctxt.fillStyle = this.colour;
+					ctxt.fill();
+				}
+
+				Init();
+
+			}
+		</script>
+	</body>
+</html>
