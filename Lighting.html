@@ -10,6 +10,52 @@
 		<script src="ViewModels/RenderViewModel.js" type="text/javascript"></script>
 		
 		<script>
+			var Segment = function(point1, point2) {
+				this.Point1 = point1 === undefined ? new Endpoint(0, 0) : point1;
+				this.Point2 = point2 === undefined ? new Endpoint(0, 0) : point2;
+				
+				this.IsEqual = function(segment) {
+					return this.Point1.IsEqual(segment.Point1) && 
+						this.Point2.IsEqual(segment.Point2); 
+				};
+			};
+		
+			var Endpoint = function(x, y) {
+				this.Position = x === undefined || y === undefined ? 
+					new Vector2(0, 0) : 
+					new Vector2(x, y);
+				this.Angle = 0;
+				this.IsBeginning = false;
+				this.Segment = null;
+				
+				this.IsEqual = function(endpoint) {
+					return this.Position.X == endpoint.Position.X && 
+						this.Position.Y == endpoint.Position.Y && 
+						this.Angle == endpoint.Angle && 
+						this.IsBeginning == endpoint.IsBeginning;
+				};
+			};
+			
+			var EndpointSorter = function(endpoints) {
+				for(var i = 0; i < endpoints.length; i++) {
+					for(var j = 0; j < endpoints.length; j++) {
+						if(j + 1 >= endpoints.length) {
+							continue;
+						}
+						
+						if((endpoints[j].Angle > endpoints[j + 1].Angle) || 
+							(endpoints[j].Angle == endpoints[j + 1].Angle && 
+								!endpoints[j].Begin && endpoints[j + 1].Begin)) {
+							var temp = endpoints[j];
+							endpoints[j] = endpoints[j + 1];
+							endpoints[j + 1] = temp;
+						}
+					}
+				}
+				
+				return endpoints;
+			};
+			
 			var Render = function() {
 				console.log('test');
 			};
