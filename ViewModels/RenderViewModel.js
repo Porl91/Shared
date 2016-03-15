@@ -4,6 +4,7 @@ var RenderViewModel = function(config) {
 	this.canvasId = null;
 	this.canvas = null;
 	this.context = null;
+	this.updateCallback = null;
 	this.renderCallback = null;
 	
 	this.BeginRender = function() {
@@ -16,6 +17,10 @@ var RenderViewModel = function(config) {
 		this.canvas = document.getElementById(this.canvasId);
 		this.context = this.canvas.getContext("2d");
 		
+		if(typeof(config.UpdateCallback) == 'function') {
+			this.updateCallback = config.UpdateCallback;
+		}
+		
 		if(typeof(config.RenderCallback) == 'function') {
 			this.renderCallback = config.RenderCallback;
 		}
@@ -23,8 +28,10 @@ var RenderViewModel = function(config) {
 		this.PrepareCanvas(true, true);
 		this.FillContext("#000");
 		
+		viewModel.UpdateMain();
 		viewModel.RenderMain();
 		setInterval(function() {
+			viewModel.UpdateMain();
 			viewModel.RenderMain();
 		}, config.Fps === undefined ? 
 			17 : 1000 / config.Fps		// Ms per render
@@ -54,6 +61,12 @@ var RenderViewModel = function(config) {
 		this.context.fillStyle = colour;
 		this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
 		this.context.fillStyle = oldColour;
+	};
+	
+	this.UpdateMain = function() {
+		if(typeof(this.updateCallback) == 'function') {
+			this.updateCallback();
+		}
 	};
 	
 	this.RenderMain = function() {

@@ -56,13 +56,18 @@
 				return endpoints;
 			};
 			
+			var Update = function() {
+				console.log('update');
+			};
+			
 			var Render = function() {
-				console.log('test');
+				console.log('render');
 			};
 		
 			new RenderViewModel({
 				CanvasId: 'scene', 
 				Fps: 1, 
+				UpdateCallback: Update, 
 				RenderCallback: Render
 			}).BeginRender();
 		</script>
