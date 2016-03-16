@@ -4,7 +4,7 @@
 		<canvas id="scene"></canvas>
 		<link rel="stylesheet" type="text/css" href="Content/CSS/Global.css"/>
 		<script src="Geom/Vector2.js" type="text/javascript"></script>
-		<script src="ViewModels/RenderViewModel.js" type="text/javascript"></script>
+		<script src="ViewModels/GameViewModel.js" type="text/javascript"></script>
 		<script>
 			var DrawAShittyLine = function() {
 				var p1 = new Vector2(20, 50);
@@ -46,11 +46,11 @@
 			};
 			
 			window.onload = function() {
-				new RenderViewModel({
+				new GameViewModel({
 					CanvasId: 'scene', 
 					Fps: 1, 
 					RenderCallback: DrawTriangle
-				}).BeginRender();
+				}).Begin();
 			};
 			
 		</script>

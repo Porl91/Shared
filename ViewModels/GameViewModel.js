@@ -1,13 +1,14 @@
-var RenderViewModel = function(config) {
+var GameViewModel = function(config) {
 	var viewModel = this;
 	
 	this.canvasId = null;
 	this.canvas = null;
-	this.context = null;
+	this.context = null
+	this.initialiseCallback = null;
 	this.updateCallback = null;
 	this.renderCallback = null;
 	
-	this.BeginRender = function() {
+	this.Begin = function() {
 		if(typeof(config.CanvasId) == 'string') {
 			this.canvasId = config.CanvasId;
 		} else {
@@ -16,6 +17,10 @@ var RenderViewModel = function(config) {
 	
 		this.canvas = document.getElementById(this.canvasId);
 		this.context = this.canvas.getContext("2d");
+		
+		if(typeof(config.InitialiseCallback) == 'function') {
+			this.initialiseCallback = config.InitialiseCallback;
+		}
 		
 		if(typeof(config.UpdateCallback) == 'function') {
 			this.updateCallback = config.UpdateCallback;
@@ -28,6 +33,7 @@ var RenderViewModel = function(config) {
 		this.PrepareCanvas(true, true);
 		this.FillContext("#000");
 		
+		viewModel.Initialise();
 		viewModel.UpdateMain();
 		viewModel.RenderMain();
 		setInterval(function() {
@@ -61,6 +67,12 @@ var RenderViewModel = function(config) {
 		this.context.fillStyle = colour;
 		this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
 		this.context.fillStyle = oldColour;
+	};
+	
+	this.Initialise = function() {
+		if(typeof(this.initialiseCallback) == 'function') {
+			this.initialiseCallback();
+		}
 	};
 	
 	this.UpdateMain = function() {

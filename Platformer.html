@@ -1,0 +1,31 @@
+<!doctype html/>
+<html>
+	<head>
+		<title>Platformer</title>
+	</head>
+	<body>
+		<canvas id="scene"></canvas>
+		<link rel="stylesheet" type="text/css" href="Content/CSS/Global.css"/>
+		<script src="Geom/Vector2.js" type="text/javascript"></script>
+		<script src="ViewModels/GameViewModel.js" type="text/javascript"></script>
+		
+		<script>
+			var Initialise = function() {
+			};
+		
+			var Update = function() {
+			};
+			
+			var Render = function() {
+			};
+		
+			new GameViewModel({
+				CanvasId: 'scene', 
+				Fps: 1, 
+				InitialiseCallback: Initialise, 
+				UpdateCallback: Update, 
+				RenderCallback: Render
+			}).Begin();
+		</script>
+	</body>
+</html>
