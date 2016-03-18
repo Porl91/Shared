@@ -4,29 +4,29 @@ var Vector2 = function(x, y) {
 	
 	this.Add = function(other) {
 		return typeof(other) == 'object' ?
-			new Vector2(this.x + v2.x, this.y + v2.y) : 
+			new Vector2(this.x + other.x, this.y + other.y) : 
 			new Vector2(this.x + other, this.y + other);
 	};
 	
 	this.Sub = function(other) {
 		return typeof(other) == 'object' ?
-			new Vector2(this.x - v2.x, this.y - v2.y) : 
+			new Vector2(this.x - other.x, this.y - other.y) : 
 			new Vector2(this.x - other, this.y - other);
 	};
 	
 	this.Mult = function(other) {
 		return typeof(other) == 'object' ?
-			new Vector2(this.x * v2.x, this.y * v2.y) : 
+			new Vector2(this.x * other.x, this.y * other.y) : 
 			new Vector2(this.x * other, this.y * other);
 	};
 	
 	this.Div = function(other) {
 		return typeof(other) == 'object' ?
-			new Vector2(this.x / v2.x, this.y / v2.y) : 
+			new Vector2(this.x / other.x, this.y / other.y) : 
 			new Vector2(this.x / other, this.y / other);
 	};
 	
-	this.Cross = function(v2) {
-		return this.x * v2.y - this.y * v2.x;
+	this.Cross = function(other) {
+		return this.x * other.y - this.y * other.x;
 	};
 };
