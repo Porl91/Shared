@@ -10,13 +10,107 @@
 		<script src="ViewModels/GameViewModel.js" type="text/javascript"></script>
 		
 		<script>
-			var Initialise = function() {
-			};
-		
-			var Update = function() {
+			var Line = function(v1, v2) {
+				this.Point1 = v1;
+				this.Point2 = v2;
+				this.AABB = null;
+				
+				this.Initialise = function() {
+					// Create bounding box around line
+					var xHalfDiff = (this.Point2.x - this.Point1.x) >> 1;
+					var yHalfDiff = (this.Point2.y - this.Point1.y) >> 1;
+					
+					this.AABB = new AABB(
+						new Vector2(xHalfDiff + this.Point1.x, yHalfDiff + this.Point1.y), 
+						xHalfDiff, yHalfDiff
+					);
+				};
+				
+				this.IsIntersecting = function(other, collisionPoint) {
+					// Cheap AABB check (false for most cases)
+					if(this.AABB.IsIntersecting(other.AABB))
+						return false;
+					
+					// Calculate difference (generate line segments from points)
+					var seg1 = this.Point2.Sub(this.Point1);
+					var seg2 = other.Point2.Sub(other.Point1);
+					
+					var denom = seg1.Cross(seg2);
+					var diffBetweenStartPoints = this.Point1.Sub(other.Point1);
+					var s = seg1.Cross(diffBetweenStartPoints) / denom;
+					var t = seg2.Cross(diffBetweenStartPoints) / denom;
+					
+					if(s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+						collisionPoint = new Vector2(
+							this.Point1.x + t * seg1.x, 
+							this.Point1.y + t * seg1.y
+						);
+						
+						return true;
+					}
+					
+					return false;
+				};
+				
+				this.Draw = function(viewModel) {
+					viewModel.context.beginPath();
+					viewModel.context.moveTo(this.Point1.x, this.Point1.y);
+					viewModel.context.lineTo(this.Point2.x, this.Point2.y);
+					viewModel.context.stroke();
+					viewModel.context.closePath();
+				};
+				
+				this.Initialise();
 			};
 			
-			var Render = function() {
+			var AABB = function(v, halfWidth, halfHeight) {
+				this.position = v;
+				this.halfWidth = halfWidth;
+				this.halfHeight = halfHeight;
+				
+				this.IsIntersecting = function(other) {
+					return !(this.position.x + this.halfWidth < other.position.x - other.halfWidth || 
+						this.position.x - this.halfWidth > other.position.x + other.halfWidth || 
+						this.position.y + this.halfHeight < other.position.y - other.halfHeight || 
+						this.position.y - this.halfHeight > other.position.y + other.halfHeight);
+				};
+			};
+			
+			var lines = [];
+		
+			var Initialise = function(viewModel) {
+				/*
+				var xStart = 150;
+				var yStart = 400;
+				var currentPoint = new Vector2(xStart, yStart);
+				
+				// Generate 10 connected lines for the platform
+				for(var i = 1; i < 10; i++) {
+					var nextPoint = new Vector2(i * 80 + xStart, currentPoint.y + ((Math.random() - 0.5) * 100) | 0);
+					lines.push(new Line(currentPoint, nextPoint));
+					currentPoint = nextPoint;
+				}
+				*/
+				
+				var l1 = new Line(new Vector2(100, 20), new Vector2(200, 100));
+				var l2 = new Line(new Vector2(150, 20), new Vector2(200, 150));
+				
+				console.log(l1.IsIntersecting(l2));
+				
+				lines.push(l1);
+				lines.push(l2);
+			};
+		
+			var Update = function(viewModel) {
+			};
+			
+			var Render = function(viewModel) {
+				viewModel.context.strokeStyle = "#fff";
+				viewModel.context.lineWidth = 1;
+				
+				for(var i = 0; i < lines.length; i++) {
+					lines[i].Draw(viewModel);
+				}
 			};
 		
 			new GameViewModel({

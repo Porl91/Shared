@@ -71,13 +71,13 @@ var GameViewModel = function(config) {
 	
 	this.Initialise = function() {
 		if(typeof(this.initialiseCallback) == 'function') {
-			this.initialiseCallback();
+			this.initialiseCallback(viewModel);
 		}
 	};
 	
 	this.UpdateMain = function() {
 		if(typeof(this.updateCallback) == 'function') {
-			this.updateCallback();
+			this.updateCallback(viewModel);
 		}
 	};
 	
@@ -87,7 +87,7 @@ var GameViewModel = function(config) {
 		this.context.fillStyle = "#fff";
 		
 		if(typeof(this.renderCallback) == 'function') {
-			this.renderCallback();
+			this.renderCallback(viewModel);
 		}
 	};
 };
