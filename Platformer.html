@@ -28,7 +28,7 @@
 				
 				this.IsIntersecting = function(other, collisionPoint) {
 					// Cheap AABB check (false for most cases)
-					if(this.AABB.IsIntersecting(other.AABB))
+					if(!this.AABB.IsIntersecting(other.AABB))
 						return false;
 					
 					// Calculate difference (generate line segments from points)
@@ -79,7 +79,6 @@
 			var lines = [];
 		
 			var Initialise = function(viewModel) {
-				/*
 				var xStart = 150;
 				var yStart = 400;
 				var currentPoint = new Vector2(xStart, yStart);
@@ -90,18 +89,40 @@
 					lines.push(new Line(currentPoint, nextPoint));
 					currentPoint = nextPoint;
 				}
-				*/
 				
+				/*
 				var l1 = new Line(new Vector2(100, 20), new Vector2(200, 100));
 				var l2 = new Line(new Vector2(150, 20), new Vector2(200, 150));
 				
-				console.log(l1.IsIntersecting(l2));
+				window.onkeydown = function(e) {
+					l1.Point2.x += function(e) {
+						switch(e.keyCode) {
+							case 65: 
+								return -1;
+							case 68:
+								return 1;
+						}
+						return 0;
+					}(e);
+					
+					l1.Point2.y += function(e) {
+						switch(e.keyCode) {
+							case 87: 
+								return -1;
+							case 83:
+								return 1;
+						}
+						return 0;
+					}(e);
+				};
 				
 				lines.push(l1);
 				lines.push(l2);
+				*/
 			};
 		
 			var Update = function(viewModel) {
+				console.log(lines[0].IsIntersecting(lines[1]));
 			};
 			
 			var Render = function(viewModel) {
@@ -115,7 +136,7 @@
 		
 			new GameViewModel({
 				CanvasId: 'scene', 
-				Fps: 1, 
+				Fps: 5, 
 				InitialiseCallback: Initialise, 
 				UpdateCallback: Update, 
 				RenderCallback: Render
