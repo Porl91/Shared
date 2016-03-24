@@ -3,6 +3,10 @@ var AABB = function(v, halfWidth, halfHeight) {
 	this.halfWidth = halfWidth;
 	this.halfHeight = halfHeight;
 	
+	this.UpdatePosition = function(position) {
+		this.position = position;
+	};
+	
 	this.IsIntersecting = function(other) {
 		return !(this.position.x + this.halfWidth < other.position.x - other.halfWidth || 
 			this.position.x - this.halfWidth > other.position.x + other.halfWidth || 

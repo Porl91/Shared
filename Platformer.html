@@ -13,52 +13,134 @@
 		
 		<script>
 			var lineSegs = [];
-		
-			var Initialise = function(viewModel) {
-				var xStart = 150;
-				var yStart = 400;
-				var currentPoint = new Vector2(xStart, yStart);
+			var points = [];
+			var player;
+			
+			var keyboard;
+			
+			var Player = function(position, aabb) {
+				this.Position = position;
+				this.Velocity = new Vector2(0, 0);
+				this.Acceleration = new Vector2(0, 0);
+				this.AABB = aabb;
+				this.Jumping = false;
 				
-				// Generate 10 connected lines for the platform
-				for(var i = 1; i < 10; i++) {
-					var nextPoint = new Vector2(i * 80 + xStart, currentPoint.y + ((Math.random() - 0.5) * 100) | 0);
-					lineSegs.push(new LineSegment(currentPoint, nextPoint));
-					currentPoint = nextPoint;
-				}
-				
-				/*
-				var l1 = new LineSegment(new Vector2(100, 20), new Vector2(200, 100));
-				var l2 = new LineSegment(new Vector2(150, 20), new Vector2(200, 150));
-				
-				window.onkeydown = function(e) {
-					l1.Point2.x += function(e) {
-						switch(e.keyCode) {
-							case 65: 
-								return -1;
-							case 68:
-								return 1;
-						}
-						return 0;
-					}(e);
+				this.Update = function() {
+					this.AABB.position = this.Position;
 					
-					l1.Point2.y += function(e) {
-						switch(e.keyCode) {
-							case 87: 
-								return -1;
-							case 83:
-								return 1;
-						}
-						return 0;
-					}(e);
+					var newPos = new Vector2(this.Position.x, this.Position.y);
+					
+					if(keyboard.IsKeyDown(65)) {
+						newPos.x -= 5;
+					}
+					if(keyboard.IsKeyDown(68)) {
+						newPos.x += 5;
+					}
+					if(keyboard.IsKeyDown(32)) {
+						this.HandleJumpAction();
+					}
+					
+					this.Velocity = this.Velocity.Add(this.Acceleration);
+					this.Acceleration = this.Acceleration.Add(new Vector2(0, 0.0981));
+					newPos = newPos.Add(this.Velocity);
+					
+					// Test collisions
+					this.Position = newPos;
 				};
 				
-				lineSegs.push(l1);
-				lineSegs.push(l2);
-				*/
+				this.HandleJumpAction = function() {
+				};
+				
+				this.Render = function(viewModel) {
+					var x0 = (this.Position.x - this.AABB.halfWidth) | 0;
+					var x1 = (this.Position.x + this.AABB.halfWidth) | 0;
+					var y0 = (this.Position.y - this.AABB.halfHeight) | 0;
+					var y1 = (this.Position.y + this.AABB.halfHeight) | 0;
+				
+					viewModel.context.beginPath();
+					
+					viewModel.context.moveTo(x0, y0);
+					viewModel.context.lineTo(x1, y0);
+					viewModel.context.moveTo(x1, y0);
+					viewModel.context.lineTo(x1, y1);
+					viewModel.context.moveTo(x1, y1);
+					viewModel.context.lineTo(x0, y1);
+					viewModel.context.moveTo(x0, y1);
+					viewModel.context.lineTo(x0, y0);
+					
+					viewModel.context.stroke();
+					viewModel.context.closePath();
+				};
 			};
 		
+			var Initialise = function(viewModel) {
+				keyboard = new KeyboardStateManager();
+				player = new Player(new Vector2(200, 200), new AABB(new Vector2(200, 200), 25, 40));
+			
+				var xStart = 0;
+				var yStart = Math.random() * 200 + 500 | 0;
+				var maxPoints = Math.random() * 5 + 15 | 0;
+				
+				// Generate {maxPoints} connected lines for the platform
+				// Find the midpoint between the endpoints of each line
+				// Get the perpendicular vector to the line segment constructed from these endpoints
+				// Normalise the line segment and multiply it by some random arc peak
+				// Add this to the midpoint
+				// Create a quadratic bezier curve with more granular points in between the initial points
+				// Could possibly generate octaves of bezier curves to apply generative detail
+				
+				var previousPoint = new Vector2(xStart, yStart);
+				
+				for(var i = 1; i < 15; i++) {
+					var currentPoint = new Vector2(150 * i + xStart, previousPoint.y + ((Math.random() - 0.5) * 100) | 0);
+					CreateGranularPoints(previousPoint, currentPoint);
+					previousPoint = currentPoint;
+				}
+				
+				CreateLinesFromPoints();
+			};
+			
+			var CreateGranularPoints = function(point1, point2) {
+				var lineSegment = point2.Sub(point1);
+				var perpLineSegNorm = lineSegment.Perp().Normalise();
+				var curveHeight = (Math.random() * 2.0 - 1.5) * 40;
+				var curvePeakPoint = point1.Add(lineSegment.Mid()).Add(perpLineSegNorm.Mult(curveHeight));
+				
+				var numPointsRecip = 1.0 / (Math.random() * 5.0 + 10.0);
+				for(var j = 0.0; j <= 1.0; j += numPointsRecip) {
+					var lerp1 = point1.Lerp(curvePeakPoint, j);
+					var lerp2 = point2.Lerp(curvePeakPoint, 1.0 - j);
+					var lerp3 = lerp2.Lerp(lerp1, 1.0 - j); // LERPLERPLERPLERP
+					
+					points.push(lerp3);
+				}
+			};
+			
+			var CreateLinesFromPoints = function() {
+				var previousPoint = points[0];
+				
+				for(var i = 1; i < points.length; i++) {
+					var currentPoint = points[i];
+					lineSegs.push(new LineSegment(new Vector2(previousPoint.x, previousPoint.y), new Vector2(currentPoint.x, currentPoint.y)));
+					previousPoint = currentPoint;
+				}
+			};
+			
+			var KeyboardStateManager = function() {
+				var $keyboardStateManager = this;
+				this.keyStates = [];
+				
+				window.onkeydown = window.onkeyup = function(e) {
+					$keyboardStateManager.keyStates[e.keyCode] = e.type == 'keydown';
+				};
+				
+				this.IsKeyDown = function(keyCode) {
+					return this.keyStates[keyCode];
+				};
+			};
+			
 			var Update = function(viewModel) {
-				console.log(lineSegs[0].IsIntersecting(lineSegs[1]));
+				player.Update();
 			};
 			
 			var Render = function(viewModel) {
@@ -72,11 +154,13 @@
 					viewModel.context.stroke();
 					viewModel.context.closePath();
 				}
+				
+				player.Render(viewModel);
 			};
 		
 			new GameViewModel({
 				CanvasId: 'scene', 
-				Fps: 5, 
+				Fps: 28, 
 				InitialiseCallback: Initialise, 
 				UpdateCallback: Update, 
 				RenderCallback: Render
