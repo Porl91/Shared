@@ -12,22 +12,20 @@
 		<script src="ViewModels/GameViewModel.js" type="text/javascript"></script>
 
 		<script>
-			var lineSegs = [];
-			var points = [];
 			var player;
 
 			var keyboard;
+			var levelComponents;
 
-			var Player = function(position, aabb) {
+			var Player = function(position, aabb, levelComponents) {
 				this.Position = position;
 				this.Velocity = new Vector2(0, 0);
 				this.Acceleration = new Vector2(0, 0);
 				this.AABB = aabb;
 				this.Jumping = false;
+				this.LevelComponents = levelComponents;
 
 				this.Update = function() {
-					this.AABB.position = this.Position;
-
 					if(keyboard.IsKeyDown(65)) {
 						this.Velocity.x -= 5;
 					} else {
@@ -47,9 +45,23 @@
 					this.Velocity = this.Velocity.Add(this.Acceleration);
 					this.Acceleration = this.Acceleration.Add(new Vector2(0, 0.0981));
 
-					// Test collisions
+					// Here we'll test to see whether collisions on any of our player's
+					// four edges have occurred against the terrain.
+					// Even with the qualifying AABB collision checks for our line segment
+					// intersections, it would cripple performance to test against all
+					// segments. Instead, we'll query the LevelComponents class to nominate
+					// a subset of the line segments collection for us to test against.
+					// For this we'll be providing this class with our future position.
 
 					this.Position = this.Position.Add(this.Velocity);
+					this.AABB.position = this.Position;
+
+					var testableLineSegments = this.LevelComponents.GetTestableLineSegments(this.AABB);
+
+					if(testableLineSegments.length > 0) {
+						this.Position = this.Position.Sub(this.Velocity);
+						this.AABB.position = this.Position;
+					}
 				};
 
 				this.HandleJumpAction = function() {
@@ -70,11 +82,8 @@
 
 					viewModel.context.moveTo(x0, y0);
 					viewModel.context.lineTo(x1, y0);
-					viewModel.context.moveTo(x1, y0);
 					viewModel.context.lineTo(x1, y1);
-					viewModel.context.moveTo(x1, y1);
 					viewModel.context.lineTo(x0, y1);
-					viewModel.context.moveTo(x0, y1);
 					viewModel.context.lineTo(x0, y0);
 
 					viewModel.context.stroke();
@@ -84,7 +93,8 @@
 
 			var Initialise = function(viewModel) {
 				keyboard = new KeyboardStateManager();
-				player = new Player(new Vector2(200, 200), new AABB(new Vector2(200, 200), 25, 40));
+				levelComponents = new LevelComponents();
+				player = new Player(new Vector2(200, 200), new AABB(new Vector2(200, 200), 25, 40), levelComponents);
 
 				GenerateTerrain();
 			};
@@ -104,13 +114,13 @@
 
 				var previousPoint = new Vector2(xStart, yStart);
 
-				points.push(new Vector2(0, window.innerHeight));
+				levelComponents.AddPoint(new Vector2(0, window.innerHeight));
 				for(var i = 1; i < 15; i++) {
 					var currentPoint = new Vector2(150 * i + xStart, previousPoint.y + ((Math.random() - 0.5) * 100) | 0);
 					CreateGranularPoints(previousPoint, currentPoint);
 					previousPoint = currentPoint;
 				}
-				points.push(new Vector2(window.innerWidth, window.innerHeight));
+				levelComponents.AddPoint(new Vector2(window.innerWidth, window.innerHeight));
 
 				CreateLinesFromPoints();
 			};
@@ -121,24 +131,25 @@
 				var curveHeight = (Math.random() * 2.0 - 1.5) * 40;
 				var curvePeakPoint = point1.Add(lineSegment.Mid()).Add(perpLineSegNorm.Mult(curveHeight));
 
-				points.push(point1);
+				levelComponents.AddPoint(point1);
 				var numPointsRecip = 1.0 / (Math.random() * 5.0 + 10.0);
 				for(var j = 0.0; j <= 1.0; j += numPointsRecip) {
 					var lerp1 = point1.Lerp(curvePeakPoint, j);
 					var lerp2 = point2.Lerp(curvePeakPoint, 1.0 - j);
 					var lerp3 = lerp2.Lerp(lerp1, 1.0 - j); // LERPLERPLERPLERP
 
-					points.push(lerp3);
+					levelComponents.AddPoint(lerp3);
 				}
-				points.push(point2);
+				levelComponents.AddPoint(point2);
 			};
 
 			var CreateLinesFromPoints = function() {
+				var points = levelComponents.GetPoints();
 				var previousPoint = points[0];
 
 				for(var i = 1; i < points.length; i++) {
 					var currentPoint = points[i];
-					lineSegs.push(new LineSegment(new Vector2(previousPoint.x, previousPoint.y), new Vector2(currentPoint.x, currentPoint.y)));
+					levelComponents.AddLineSegment(new LineSegment(previousPoint, currentPoint));
 					previousPoint = currentPoint;
 				}
 			};
@@ -156,11 +167,89 @@
 				};
 			};
 
+			var LevelComponents = function() {
+				var points = [];
+				var lineSegments = [];
+
+				/*
+				When adding line segments we're also adding them to a collection that
+				associates them to a section of the world defined in grid cells.
+				The dimensions of each grid cell are defined by the 'gridCellSize'
+				variable below. By doing this (spatial partitioning) we're creating an
+				index that we can use latest to quickly find testable, nearby line segments.
+				*/
+
+				// 3D array declaration in JS :/
+				var lineSegGrid = [[[]]];
+				var gridCellSize = 10;
+
+				this.AddPoint = function(point) {
+					points.push(point);
+				};
+
+				this.AddLineSegment = function(lineSegment) {
+					// Bit clumsy but good enough for our average line segment length.
+
+					var xMin = Math.min(lineSegment.Point1.x, lineSegment.Point2.x);
+					var xMax = Math.max(lineSegment.Point1.x, lineSegment.Point2.x);
+					var yMin = Math.min(lineSegment.Point1.y, lineSegment.Point2.y);
+					var yMax = Math.max(lineSegment.Point1.y, lineSegment.Point2.y);
+
+					var x0 = xMin / gridCellSize | 0;
+					var x1 = xMax / gridCellSize | 0;
+					var y0 = yMin / gridCellSize | 0;
+					var y1 = yMax / gridCellSize | 0;
+
+					for(var y = y0; y <= y1; y++) {
+						for(var x = x0; x <= x1; x++) {
+							if(lineSegGrid[y] === undefined) lineSegGrid[y] = [];
+							if(lineSegGrid[y][x] === undefined) lineSegGrid[y][x] = [];
+							lineSegGrid[y][x].push(lineSegment);
+						}
+					}
+
+					lineSegments.push(lineSegment);
+				};
+
+				this.GetPoints = function() {
+					return points;
+				};
+
+				this.GetLineSegments = function() {
+					return lineSegments;
+				};
+
+				this.GetTestableLineSegments = function(aabb) {
+					var lineSegsInRange = [];
+
+					var x0 = (aabb.position.x - aabb.halfWidth) / gridCellSize | 0;
+					var x1 = (aabb.position.x + aabb.halfWidth) / gridCellSize | 0;
+					var y0 = (aabb.position.y - aabb.halfHeight) / gridCellSize | 0;
+					var y1 = (aabb.position.y + aabb.halfHeight) / gridCellSize | 0;
+
+					for(var y = y0; y <= y1; y++) {
+						var row = lineSegGrid[y];
+						if(row === undefined) continue;
+						for(var x = x0; x <= x1; x++) {
+							var col = row[x];
+							if(col === undefined) continue;
+							for(var i = 0; i < col.length; i++) {
+								lineSegsInRange.push(col[i]);
+							}
+						}
+					}
+
+					return lineSegsInRange;
+				};
+			};
+
 			var Update = function(viewModel) {
 				player.Update();
 			};
 
 			var Render = function(viewModel) {
+				var lineSegs = levelComponents.GetLineSegments();
+
 				viewModel.context.strokeStyle = "#fff";
 				viewModel.context.lineWidth = 0;
 				viewModel.context.fillStyle = "#060";
