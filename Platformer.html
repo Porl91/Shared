@@ -28,27 +28,36 @@
 				this.Update = function() {
 					this.AABB.position = this.Position;
 					
-					var newPos = new Vector2(this.Position.x, this.Position.y);
-					
 					if(keyboard.IsKeyDown(65)) {
-						newPos.x -= 5;
+						this.Velocity.x -= 5;
+					} else {
+						this.Velocity.x = 0;
 					}
+					
 					if(keyboard.IsKeyDown(68)) {
-						newPos.x += 5;
+						this.Velocity.x += 5;
+					} else {
+						this.Velocity.x = 0;
 					}
+					
 					if(keyboard.IsKeyDown(32)) {
 						this.HandleJumpAction();
 					}
 					
 					this.Velocity = this.Velocity.Add(this.Acceleration);
 					this.Acceleration = this.Acceleration.Add(new Vector2(0, 0.0981));
-					newPos = newPos.Add(this.Velocity);
 					
 					// Test collisions
-					this.Position = newPos;
+					
+					this.Position = this.Position.Add(this.Velocity);
 				};
 				
 				this.HandleJumpAction = function() {
+					if(!this.Jumping) {
+						this.Acceleration = new Vector2(0, -0.9);
+						this.Velocity = new Vector2(this.Velocity.x, 0).Add(this.Acceleration);
+						this.Jumping = true;
+					}
 				};
 				
 				this.Render = function(viewModel) {
@@ -77,8 +86,12 @@
 				keyboard = new KeyboardStateManager();
 				player = new Player(new Vector2(200, 200), new AABB(new Vector2(200, 200), 25, 40));
 			
+				GenerateTerrain();
+			};
+			
+			var GenerateTerrain = function() {
 				var xStart = 0;
-				var yStart = Math.random() * 200 + 500 | 0;
+				var yStart = Math.random() * 100 + 400 | 0;
 				var maxPoints = Math.random() * 5 + 15 | 0;
 				
 				// Generate {maxPoints} connected lines for the platform
@@ -91,11 +104,13 @@
 				
 				var previousPoint = new Vector2(xStart, yStart);
 				
+				points.push(new Vector2(0, window.innerHeight));
 				for(var i = 1; i < 15; i++) {
 					var currentPoint = new Vector2(150 * i + xStart, previousPoint.y + ((Math.random() - 0.5) * 100) | 0);
 					CreateGranularPoints(previousPoint, currentPoint);
 					previousPoint = currentPoint;
 				}
+				points.push(new Vector2(window.innerWidth, window.innerHeight));
 				
 				CreateLinesFromPoints();
 			};
@@ -106,6 +121,7 @@
 				var curveHeight = (Math.random() * 2.0 - 1.5) * 40;
 				var curvePeakPoint = point1.Add(lineSegment.Mid()).Add(perpLineSegNorm.Mult(curveHeight));
 				
+				points.push(point1);
 				var numPointsRecip = 1.0 / (Math.random() * 5.0 + 10.0);
 				for(var j = 0.0; j <= 1.0; j += numPointsRecip) {
 					var lerp1 = point1.Lerp(curvePeakPoint, j);
@@ -114,6 +130,7 @@
 					
 					points.push(lerp3);
 				}
+				points.push(point2);
 			};
 			
 			var CreateLinesFromPoints = function() {
@@ -145,16 +162,20 @@
 			
 			var Render = function(viewModel) {
 				viewModel.context.strokeStyle = "#fff";
-				viewModel.context.lineWidth = 1;
+				viewModel.context.lineWidth = 0;
+				viewModel.context.fillStyle = "#060";
 				
-				for(var i = 0; i < lineSegs.length; i++) {
-					viewModel.context.beginPath();
-					viewModel.context.moveTo(lineSegs[i].Point1.x, lineSegs[i].Point1.y);
+				viewModel.context.beginPath();
+				viewModel.context.moveTo(lineSegs[0].Point1.x, lineSegs[0].Point1.y);
+				
+				for(var i = 1; i < lineSegs.length; i++) {
 					viewModel.context.lineTo(lineSegs[i].Point2.x, lineSegs[i].Point2.y);
-					viewModel.context.stroke();
-					viewModel.context.closePath();
 				}
 				
+				viewModel.context.closePath();
+				viewModel.context.fill();
+				
+				viewModel.context.lineWidth = 1;
 				player.Render(viewModel);
 			};
 		

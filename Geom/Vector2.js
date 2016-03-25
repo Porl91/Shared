@@ -55,3 +55,7 @@ var Vector2 = function(x, y) {
 		return this.Add(other.Sub(this).Mult(i));
 	};
 };
+
+// Static methods
+
+Vector2.Zero = new Vector2(0, 0);
