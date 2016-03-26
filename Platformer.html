@@ -189,6 +189,11 @@
 
 				this.AddLineSegment = function(lineSegment) {
 					// Bit clumsy but good enough for our average line segment length.
+					// If the line seg slope is 1 or -1 then this is a bit inefficient.
+					// Could use a Bresenham here to be a bit more accurate about the
+					// sectors that the line is *actually* in and prevent false negatives,
+					// although as we'll typically be testing against lines comprising
+					// quadrilaterals we should be aight. :tup:
 
 					var xMin = Math.min(lineSegment.Point1.x, lineSegment.Point2.x);
 					var xMax = Math.max(lineSegment.Point1.x, lineSegment.Point2.x);
@@ -201,8 +206,8 @@
 					var y1 = yMax / gridCellSize | 0;
 
 					for(var y = y0; y <= y1; y++) {
+						if(lineSegGrid[y] === undefined) lineSegGrid[y] = [];
 						for(var x = x0; x <= x1; x++) {
-							if(lineSegGrid[y] === undefined) lineSegGrid[y] = [];
 							if(lineSegGrid[y][x] === undefined) lineSegGrid[y][x] = [];
 							lineSegGrid[y][x].push(lineSegment);
 						}
