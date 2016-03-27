@@ -19,21 +19,25 @@
 
 			var Player = function(position, aabb, levelComponents) {
 				this.Position = position;
-				this.Velocity = new Vector2(0, 0);
-				this.Acceleration = new Vector2(0, 0);
+				this.Velocity = Vector2.Zero;
+				this.Acceleration = Vector2.Zero;
 				this.AABB = aabb;
 				this.Jumping = false;
 				this.LevelComponents = levelComponents;
 
+				var maxStride = 10;
+
 				this.Update = function() {
 					if(keyboard.IsKeyDown(65)) {
 						this.Velocity.x -= 5;
-					} else {
-						this.Velocity.x = 0;
-					}
-
-					if(keyboard.IsKeyDown(68)) {
+						if(this.Velocity.x < -maxStride) {
+							this.Velocity.x = -maxStride;
+						}
+					} else if(keyboard.IsKeyDown(68)) {
 						this.Velocity.x += 5;
+						if(this.Velocity.x > maxStride) {
+							this.Velocity.x = maxStride;
+						}
 					} else {
 						this.Velocity.x = 0;
 					}
@@ -59,8 +63,13 @@
 					var testableLineSegments = this.LevelComponents.GetTestableLineSegments(this.AABB);
 
 					if(testableLineSegments.length > 0) {
+
+						// TODO: Check collisions against line segments subset.
+
 						this.Position = this.Position.Sub(this.Velocity);
 						this.AABB.position = this.Position;
+						this.Acceleration = this.Velocity = Vector2.Zero;
+						this.Jumping = false;
 					}
 				};
 
