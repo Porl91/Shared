@@ -1,0 +1,9 @@
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\bin\Debug\ASCII.exe.config
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\bin\Debug\ASCII.exe
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\bin\Debug\ASCII.pdb
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\obj\Debug\ASCII.csprojResolveAssemblyReference.cache
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\obj\Debug\ASCII.exe
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\obj\Debug\ASCII.pdb
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\bin\Debug\car.jpg
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\bin\Debug\pepe.png
+c:\users\porl\documents\visual studio 2015\Projects\ASCII\ASCII\bin\Debug\cat.jpg
